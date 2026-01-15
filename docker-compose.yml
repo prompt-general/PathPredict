@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5.20-enterprise
+    container_name: path-predict-neo4j
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/pathpredict123
+      - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - path-predict-net
+
+  api:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.api
+    container_name: path-predict-api
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=pathpredict123
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - neo4j
+    networks:
+      - path-predict-net
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+
+networks:
+  path-predict-net:
+    driver: bridge
