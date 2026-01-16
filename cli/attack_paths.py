@@ -183,22 +183,64 @@ def summary():
     click.echo("📊 Generating attack path summary...")
     
     try:
-        from api.attack_paths import attack_paths_summary
+        traversal = AttackPathTraversal()
+        scoring = RiskScoringEngine()
         
-        # Use API function
-        summary_data = attack_paths_summary()
+        # Get all paths
+        all_paths_dict = traversal.detect_all_paths()
+        
+        summary = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "total_paths": 0,
+            "by_type": {},
+            "by_risk_level": {
+                "CRITICAL": 0,
+                "HIGH": 0,
+                "MEDIUM": 0,
+                "LOW": 0,
+                "INFO": 0
+            },
+            "by_provider": {},
+            "top_critical": []
+        }
+        
+        all_paths = []
+        for path_type, paths in all_paths_dict.items():
+            summary["by_type"][path_type] = len(paths)
+            all_paths.extend(paths)
+        
+        # Score all paths
+        scored_paths = scoring.batch_score_paths(all_paths)
+        summary["total_paths"] = len(scored_paths)
+        
+        # Count by risk level
+        for path in scored_paths:
+            risk_level = path['risk_assessment']['risk_level']
+            summary["by_risk_level"][risk_level] += 1
+            
+            # Count providers
+            providers = tuple(path.get('providers', []))
+            if providers:
+                summary["by_provider"][providers] = summary["by_provider"].get(providers, 0) + 1
+        
+        # Get top 5 critical paths
+        critical_paths = [
+            p for p in scored_paths 
+            if p['risk_assessment']['risk_level'] == "CRITICAL"
+        ]
+        summary["top_critical"] = critical_paths[:5]
         
         # Display summary
         click.echo(f"\n📈 Attack Path Summary")
-        click.echo(f"Timestamp: {summary_data['timestamp']}")
-        click.echo(f"Total Paths: {summary_data['total_paths']}")
+        click.echo(f"Timestamp: {summary['timestamp']}")
+        click.echo(f"Total Paths: {summary['total_paths']}")
         
         click.echo(f"\n🔢 By Type:")
-        for path_type, count in summary_data['by_type'].items():
+        for path_type, count in summary['by_type'].items():
             click.echo(f"  {path_type}: {count}")
         
         click.echo(f"\n⚠️  By Risk Level:")
-        for level, count in summary_data['by_risk_level'].items():
+        for level, count in summary['by_risk_level'].items():
             if count > 0:
                 if level == 'CRITICAL':
                     level_display = click.style(level, fg='red', bold=True)
@@ -209,12 +251,12 @@ def summary():
                 click.echo(f"  {level_display}: {count}")
         
         click.echo(f"\n☁️  By Cloud Providers:")
-        for providers, count in summary_data['by_provider'].items():
+        for providers, count in summary['by_provider'].items():
             click.echo(f"  {providers}: {count}")
         
-        if summary_data['top_critical']:
+        if summary['top_critical']:
             click.echo(f"\n🔥 Top Critical Paths:")
-            for i, path in enumerate(summary_data['top_critical'][:3], 1):
+            for i, path in enumerate(summary['top_critical'][:3], 1):
                 click.echo(f"  {i}. {path['path_id']}")
                 click.echo(f"     Score: {path['risk_assessment']['raw_score']:.1f}")
                 click.echo(f"     Source → Target: {path['source'][:50]}... → {path['target'][:50]}...")

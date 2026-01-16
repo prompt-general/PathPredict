@@ -80,6 +80,9 @@ def server():
     click.echo("Starting Path Predict API server...")
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
 
+from cli.attack_paths import add_paths_commands
+add_paths_commands(cli)
+
 if __name__ == "__main__":
     # Import attack paths commands
     from cli.attack_paths import paths, add_paths_commands

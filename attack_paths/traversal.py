@@ -28,19 +28,19 @@ class AttackPathTemplate:
         MATCH (start:Identity)
         WHERE start.subtype IN ['User', 'ServiceAccount']
         AND start.risk_score >= 0.3
-        MATCH (target:Resource {criticality: true})
+        MATCH (target:Resource)
         WHERE target.criticality >= 0.7
         MATCH path = (start)-[:CAN_ASSUME|CAN_ACCESS|MEMBER_OF*1..5]->(target)
-        WITH path, 
+        WITH path, start, target,
              nodes(path) as path_nodes,
              relationships(path) as path_rels,
              length(path) as hop_count
         WHERE ALL(r IN path_rels WHERE r.valid_to IS NULL)
         AND hop_count <= 5
         RETURN 
-            elementId(start) as source_id,
+            start.node_id as source_id,
             start.node_id as source_node_id,
-            elementId(target) as target_id,
+            target.node_id as target_id,
             target.node_id as target_node_id,
             [node IN path_nodes | node.node_id] as node_ids,
             [r IN path_rels | type(r)] as relationship_types,
@@ -223,9 +223,12 @@ class AttackPathTraversal:
     
     def find_paths_between(self, source_id: str, target_id: str, max_hops: int = 5) -> List[Dict[str, Any]]:
         """Find all paths between two nodes"""
-        query = """
-        MATCH path = (source {node_id: $source_id})-[*1..$max_hops]->(target {node_id: $target_id})
-        WHERE ALL(r IN relationships(path) WHERE r.valid_to IS NULL)
+        # Build query with literal max_hops
+        query = f"""
+        MATCH path = (source)-[*1..{max_hops}]->(target)
+        WHERE source.node_id = $source_id
+        AND target.node_id = $target_id
+        AND ALL(r IN relationships(path) WHERE r.valid_to IS NULL)
         RETURN 
             [node IN nodes(path) | node.node_id] as nodes,
             [r IN relationships(path) | type(r)] as relationships,
@@ -237,8 +240,7 @@ class AttackPathTraversal:
         
         results = self.connection.execute_query(query, {
             "source_id": source_id,
-            "target_id": target_id,
-            "max_hops": max_hops
+            "target_id": target_id
         })
         
         paths = []
