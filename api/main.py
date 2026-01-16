@@ -27,6 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Import attack paths router
+from api.attack_paths import router as attack_paths_router
+
+# Add attack paths router
+app.include_router(attack_paths_router)
+
 # Health check endpoint
 @app.get("/")
 async def root():
@@ -130,6 +136,37 @@ async def list_accounts():
             for r in results
         ]
     }
+
+# Add a new health check endpoint for attack paths
+@app.get("/api/v1/attack-paths/health")
+async def attack_paths_health():
+    """Health check for attack path engine"""
+    try:
+        from attack_paths.traversal import AttackPathTraversal
+        from attack_paths.scoring import RiskScoringEngine
+        
+        traversal = AttackPathTraversal()
+        scoring = RiskScoringEngine()
+        
+        # Test with a simple query
+        test_paths = traversal.detect_privilege_escalation(limit=1)
+        
+        return {
+            "status": "healthy",
+            "components": {
+                "traversal_engine": "ok",
+                "scoring_engine": "ok",
+                "graph_connection": "ok"
+            },
+            "test_paths_found": len(test_paths) > 0,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 if __name__ == "__main__":
     import uvicorn
