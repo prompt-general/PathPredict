@@ -132,7 +132,7 @@ graph TB
 ### One-Command Deployment
 ```bash
 # Clone repository
-git clone https://github.com/your-org/path-predict.git
+git clone https://github.com/prompt-general/path-predict.git
 cd path-predict
 
 # Generate configuration and deploy
