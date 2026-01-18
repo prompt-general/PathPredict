@@ -4,6 +4,7 @@ import logging
 from graph.connection import get_connection
 import networkx as nx
 from datetime import datetime
+from alerts.manager import AlertManager
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +222,16 @@ class AttackPathTraversal:
             chains.append(chain)
         return chains
     
+    def detect_and_alert(self, alert_manager: Optional[AlertManager] = None, 
+                        min_severity: str = "HIGH"):
+        """Detect attack paths and send alerts"""
+        paths = self.detect_privilege_escalation()
+        
+        if alert_manager and paths:
+            alert_manager.send_attack_path_alerts(paths, min_severity)
+        
+        return paths
+
     def find_paths_between(self, source_id: str, target_id: str, max_hops: int = 5) -> List[Dict[str, Any]]:
         """Find all paths between two nodes"""
         # Build query with literal max_hops
