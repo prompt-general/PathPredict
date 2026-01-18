@@ -1,0 +1,194 @@
+# config/config.yaml
+# Path Predict Configuration
+
+# Database Configuration
+database:
+  neo4j:
+    uri: "bolt://localhost:7687"
+    username: "neo4j"
+    password: "pathpredict123"
+    max_connection_pool_size: 50
+    encrypted: false
+  
+  redis:
+    host: "localhost"
+    port: 6379
+    password: "redis123"
+    db: 0
+    default_ttl: 3600
+
+# Cloud Provider Configuration
+cloud_providers:
+  aws:
+    enabled: true
+    profiles:
+      - name: "default"
+        regions: ["us-east-1", "us-west-2", "eu-west-1"]
+    event_streams:
+      - type: "cloudtrail"
+        enabled: true
+        lookback_minutes: 60
+  
+  azure:
+    enabled: true
+    subscriptions:
+      - id: "${AZURE_SUBSCRIPTION_ID}"
+        name: "Production"
+    event_streams:
+      - type: "activity_logs"
+        enabled: true
+  
+  gcp:
+    enabled: true
+    projects:
+      - id: "${GCP_PROJECT_ID}"
+        name: "Production"
+    event_streams:
+      - type: "audit_logs"
+        enabled: true
+
+# Alerting Configuration
+alerting:
+  default_severity_threshold: "MEDIUM"
+  rate_limiting:
+    max_alerts_per_hour: 100
+    per_source_cooldown_seconds: 300
+  
+  channels:
+    slack:
+      enabled: ${SLACK_ENABLED:-false}
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#security-alerts"
+      min_severity: "MEDIUM"
+    
+    teams:
+      enabled: ${TEAMS_ENABLED:-false}
+      webhook_url: "${TEAMS_WEBHOOK_URL}"
+      min_severity: "HIGH"
+    
+    email:
+      enabled: ${EMAIL_ENABLED:-false}
+      smtp_server: "${SMTP_SERVER}"
+      smtp_port: ${SMTP_PORT:-587}
+      username: "${SMTP_USERNAME}"
+      password: "${SMTP_PASSWORD}"
+      from_address: "${FROM_EMAIL}"
+      to_addresses:
+        - "security-team@company.com"
+      min_severity: "MEDIUM"
+    
+    webhook:
+      enabled: false
+      urls:
+        - "https://webhook.company.com/security"
+      min_severity: "HIGH"
+
+# SIEM Integration
+siem:
+  splunk:
+    enabled: ${SPLUNK_ENABLED:-false}
+    host: "${SPLUNK_HOST}"
+    port: ${SPLUNK_PORT:-8088}
+    token: "${SPLUNK_TOKEN}"
+    index: "main"
+    source_type: "path_predict"
+  
+  sentinel:
+    enabled: ${SENTINEL_ENABLED:-false}
+    data_collection_endpoint: "${SENTINEL_DCE}"
+    data_collection_rule_id: "${SENTINEL_DCR_ID}"
+    stream_name: "PathPredictAttackPaths"
+
+# Machine Learning Configuration
+machine_learning:
+  gnn:
+    enabled: true
+    model_path: "models/gnn_best.pt"
+    prediction_threshold: 0.7
+    retrain_interval_hours: 168  # 1 week
+  
+  feature_engineering:
+    node_feature_count: 32
+    edge_feature_count: 16
+    graph_feature_count: 20
+
+# Compliance Configuration
+compliance:
+  enabled: true
+  schedule: "0 0 * * *"  # Daily at midnight
+  standards:
+    - "pci_dss"
+    - "hipaa"
+    - "soc2"
+  
+  reporting:
+    generate_pdf: true
+    email_report: true
+    retention_days: 365
+
+# RBAC Configuration
+rbac:
+  enabled: true
+  secret_key: "${JWT_SECRET_KEY}"
+  token_expiry_hours: 24
+  
+  default_roles:
+    - "viewer"
+  
+  admin_users:
+    - username: "admin"
+      email: "admin@company.com"
+      password_hash: "${ADMIN_PASSWORD_HASH}"
+
+# Performance Configuration
+performance:
+  query_timeout_seconds: 30
+  max_concurrent_queries: 50
+  cache_enabled: true
+  
+  scaling:
+    api_workers: 4
+    event_processor_workers: 2
+    prediction_workers: 2
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  file: "/var/log/path-predict/app.log"
+  max_size_mb: 100
+  backup_count: 10
+  
+  structured_logging: true
+  log_format: "json"
+
+# Monitoring Configuration
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    
+  metrics:
+    enabled: true
+    prefix: "path_predict"
+    
+  health_checks:
+    enabled: true
+    interval_seconds: 30
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "https://path-predict.company.com"
+    - "http://localhost:3000"
+  
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+    requests_per_hour: 1000
+  
+  docs:
+    enabled: true
+    title: "Path Predict API"
+    description: "Multi-Cloud Attack Path Prediction Platform"
