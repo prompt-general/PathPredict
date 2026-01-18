@@ -429,7 +429,7 @@ We love contributions! Here's how you can help:
 ### **Development Setup**
 ```bash
 # Clone and setup
-git clone https://github.com/your-org/path-predict.git
+git clone https://github.com/prompt-general/path-predict.git
 cd path-predict
 
 # Create virtual environment
@@ -490,17 +490,17 @@ Path Predict is licensed under **MIT License** - see [LICENSE](LICENSE) file for
 
 ## 📈 **Roadmap**
 
-### **Q2 2024**
+### **Q2 2026**
 - [ ] Kubernetes Operator for automated management
 - [ ] Advanced ML: Transformer models for path prediction
 - [ ] Extended compliance: FedRAMP, IRAP, C5
 
-### **Q3 2024**
+### **Q3 2026**
 - [ ] Additional cloud providers: Oracle Cloud, Alibaba Cloud
 - [ ] Browser extension for real-time risk visualization
 - [ ] Mobile app for on-the-go monitoring
 
-### **Q4 2024**
+### **Q4 2026**
 - [ ] Autonomous remediation with approval workflows
 - [ ] Threat intelligence integration
 - [ ] Marketplace for custom detection rules
@@ -522,6 +522,6 @@ Path Predict stands on the shoulders of giants:
 
 **Built with ❤️ by security engineers, for security engineers.**
 
-[![Star History Chart](https://api.star-history.com/svg?repos=your-org/path-predict&type=Date)](https://star-history.com/#your-org/path-predict&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=prompt-general/path-predict&type=Date)](https://star-history.com/#your-org/path-predict&Date)
 
 </div>
