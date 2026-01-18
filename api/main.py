@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 import logging
 from datetime import datetime
+from integrations.setup import setup_integrations
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,11 +28,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Setup integrations
+alert_manager = setup_integrations()
+
 # Import attack paths router
 from api.attack_paths import router as attack_paths_router
 
-# Add attack paths router
-app.include_router(attack_paths_router)
+# Add attack paths router with alert manager
+app.include_router(attack_paths_router, alert_manager=alert_manager)
 
 # Health check endpoint
 @app.get("/")

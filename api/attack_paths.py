@@ -8,7 +8,16 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Create router with dependency injection support
 router = APIRouter(prefix="/api/v1/attack-paths", tags=["attack-paths"])
+
+# Global alert manager instance
+alert_manager = None
+
+def set_alert_manager(manager):
+    """Set the global alert manager instance"""
+    global alert_manager
+    alert_manager = manager
 
 # Pydantic models for request/response
 class AttackPathRequest(BaseModel):
@@ -85,6 +94,27 @@ async def detect_attack_paths(
             p for p in scored_paths 
             if p['risk_assessment']['raw_score'] >= score_threshold
         ]
+        
+        # Send alerts if alert_manager is available
+        if alert_manager:
+            try:
+                # Convert to alert format
+                alert_paths = []
+                for path in filtered_paths:
+                    alert_path = {
+                        "path_id": path['path_id'],
+                        "type": path.get('type', 'unknown'),
+                        "source": path['source'],
+                        "target": path['target'],
+                        "hop_count": path['hop_count'],
+                        "risk_assessment": path['risk_assessment']
+                    }
+                    alert_paths.append(alert_path)
+                
+                # Send alerts through configured integrations
+                alert_manager.send_attack_path_alerts(alert_paths, min_severity="HIGH")
+            except Exception as e:
+                logger.error(f"Error sending alerts: {e}")
         
         # Convert to response format
         response_paths = []
