@@ -81,14 +81,14 @@ def server():
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
 
 from cli.attack_paths import add_paths_commands
-add_paths_commands(cli)
+from cli.realtime import add_realtime_commands
+from cli.azure import add_azure_commands
 
+# Update the main function
 if __name__ == "__main__":
-    # Import attack paths commands
-    from cli.attack_paths import paths, add_paths_commands
-    from cli.main import cli
-    
-    # Add attack paths commands to main CLI
+    # Add all command groups
     add_paths_commands(cli)
+    add_realtime_commands(cli)
+    add_azure_commands(cli)
     
     cli()
